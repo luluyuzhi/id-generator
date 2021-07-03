@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "tabnine.tabnine-vscode",
+        "golang.go",
+        "golang.go-nightly",
+        "twxs.cmake"
+    ]
+}

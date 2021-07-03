@@ -25,9 +25,9 @@ int main()
                                       }));
     }
 
-    for (auto &t : threads)
+    for (auto &thread : threads)
     {
-        t.join();
+        thread.join();
     }
 
     return 0;

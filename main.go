@@ -1,9 +1,9 @@
 package main
 
 /*
-#cgo CFLAGS: -Iinclude
+#cgo CFLAGS: -Icore/snow/include
 #cgo LDFLAGS: -L${SRCDIR}/lib  -lsnow
-#include <snow/snow.h>
+#include <snow.h>
 */
 import "C"
 import (
@@ -21,7 +21,6 @@ type SnowFlake struct {
 }
 
 func (snowFlake SnowFlake) todo() float64 {
-
 	return 1.0
 }
 

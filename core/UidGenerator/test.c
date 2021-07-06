@@ -72,7 +72,7 @@ static int calSlotIndex(struct RingBuffer *ringBuffer, long sequence)
  * @param uid
  * @return false means that the buffer is full, apply {@link RejectedPutBufferHandler}
  */
-long put(struct RingBuffer *ringBuffer, long uid)
+int put(struct RingBuffer *ringBuffer, long uid)
 {
     long currentTail = atomic_load(&ringBuffer->tail);
     long currentCursor = atomic_load(&ringBuffer->cursor);
@@ -83,6 +83,7 @@ long put(struct RingBuffer *ringBuffer, long uid)
     if (distance == ringBuffer->bufferSize - 1)
     {
         // rejectedPutHandler.rejectPutBuffer(this, uid);
+        printf("Rejected putting buffer for uid: %ld", uid);
         return -1;
     }
 
@@ -92,6 +93,7 @@ long put(struct RingBuffer *ringBuffer, long uid)
     if (atomic_load(&ringBuffer->flags[nextTailIndex]) != CAN_PUT_FLAG)
     {
         // rejectedPutHandler.rejectPutBuffer(this, uid);
+        printf("Rejected putting buffer for uid: %ld", uid);
         return -1;
     }
 
@@ -108,8 +110,71 @@ long put(struct RingBuffer *ringBuffer, long uid)
     return 0;
 }
 
+/**
+ * Take an UID of the ring at the next cursor, this is a lock free operation by using atomic cursor<p>
+ * 
+ * Before getting the UID, we also check whether reach the padding threshold, 
+ * the padding buffer operation will be triggered in another thread<br>
+ * If there is no more available UID to be taken, the specified {@link RejectedTakeBufferHandler} will be applied<br>
+ * 
+ * @return UID
+ * @throws IllegalStateException if the cursor moved back
+ */
+long take(struct RingBuffer *ringBuffer)
+{
+    // spin get next available cursor
+    long currentCursor = atomic_load(&ringBuffer->cursor);
+    // long nextCursor = cursor.updateAndGet(old->old == tail.get() ? old : old + 1);
+    long oldCursor = atomic_load(&ringBuffer->cursor);
 
+    int nextCursor;
+    {
+        int prev;
+        atomic_long newPrev;
+        do
+        {
 
+            prev = atomic_load(&ringBuffer->cursor);
+
+            if (prev == atomic_load(&ringBuffer->tail))
+            {
+                nextCursor = prev;
+            }
+            else
+            {
+                nextCursor = prev + 1;
+            }
+            atomic_init(&newPrev, prev);
+        } while (!atomic_compare_exchange_strong(&ringBuffer->cursor, &newPrev, nextCursor));
+    }
+
+    long currentTail = atomic_load(&ringBuffer->tail);
+
+    if (currentTail - nextCursor < ringBuffer->paddingThreshold)
+    {
+
+        // bufferPaddingExecutor.asyncPadding();
+    }
+
+    if (nextCursor == currentCursor)
+    {
+
+        // rejectedTakeHandler.rejectTakeBuffer(this);
+    }
+
+    int nextCursorIndex = calSlotIndex(ringBuffer, nextCursor);
+    // Assert.isTrue(flags[nextCursorIndex].get() == CAN_TAKE_FLAG, "Curosr not in can take status");
+
+    // 2. get UID from next slot
+    // 3. set next slot flag as CAN_PUT_FLAG.
+    long uid = ringBuffer->slots[nextCursorIndex];
+    const static long CAN_PUT_FLAG = 0;
+    atomic_store(&ringBuffer->flags[nextCursorIndex], CAN_PUT_FLAG);
+
+    // Note that: Step 2,3 can not swap. If we set flag before get value of slot, the producer may overwrite the
+    // slot with a new UID, and this may cause the consumer take the UID twice after walk a round the ring
+    return uid;
+}
 
 int main(int argc, char const *argv[])
 {

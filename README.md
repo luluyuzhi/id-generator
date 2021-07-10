@@ -17,3 +17,7 @@ LD_LIBRARY_PATH=lib dapr run --app-id service-snow  --app-protocol grpc  --app-p
 [IM消息ID技术专题(五)：开源分布式ID生成器UidGenerator的技术实现](http://www.52im.net/thread-2953-1-1.html)
 
 [IM消息ID技术专题(六)：深度解密滴滴的高性能ID生成器(Tinyid)](http://www.52im.net/thread-3129-1-1.html)
+
+### Time line
+
+[漫画：什么是Bitmap算法？](https://www.sohu.com/a/300039010_114877)

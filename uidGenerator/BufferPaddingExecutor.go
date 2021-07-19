@@ -10,6 +10,7 @@ import "C"
 import (
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 type UidGenerator interface {
@@ -37,12 +38,40 @@ type BufferPaddingExecutor struct {
 	lastSecond          int64
 	ringbuffer          C.struct_RingBuffer
 	bufferedUidProvider BufferedUidProvider
+	taskPool            *Pool
 
+	ticker *time.Ticker
 	// const
 	scheduleInterval int64 // DEFAULT_SCHEDULE_INTERVAL
 }
 
+func NewBufferPaddingExecutor(usingSchedule bool) *BufferPaddingExecutor {
+
+	var p BufferPaddingExecutor
+
+	atomic.StoreInt64(&p.running, 0)
+	atomic.StoreInt64(&p.lastSecond, time.Now().Unix())
+	p.taskPool = NewPool(4)
+	// this.ringBuffer = ringBuffer;
+	p.scheduleInterval = 300
+	// initialize schedule thread
+	if usingSchedule {
+		p.ticker = time.NewTicker(time.Duration(p.scheduleInterval))
+	} else {
+		p.ticker = nil
+	}
+
+	return &p
+}
+
 func (bufferPaddingExecutor BufferPaddingExecutor) start() {
+	if bufferPaddingExecutor.ticker != nil {
+		go func() {
+			for _ = range bufferPaddingExecutor.ticker.C {
+				bufferPaddingExecutor.paddingBuffer()
+			}
+		}()
+	}
 
 }
 
@@ -52,7 +81,20 @@ func (bufferPaddingExecutor BufferPaddingExecutor) isRunning() bool {
 }
 
 func (bufferPaddingExecutor BufferPaddingExecutor) asyncPadding() {
+	t := NewTask(func() error {
+		bufferPaddingExecutor.paddingBuffer()
+		return nil
+	})
 
+	//开一个协程 不断的向 Pool 输送打印一条时间的task任务
+	go func() {
+		for {
+			bufferPaddingExecutor.taskPool.EntryChannel <- t
+		}
+	}()
+
+	//启动协程池p
+	bufferPaddingExecutor.taskPool.Run()
 }
 
 func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
@@ -88,4 +130,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) setScheduleInterval(scheduleI
 
 func (bufferPaddingExecutor BufferPaddingExecutor) shutdown() {
 
+	if bufferPaddingExecutor.ticker != nil {
+		bufferPaddingExecutor.ticker.Stop()
+	}
 }

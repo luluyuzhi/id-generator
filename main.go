@@ -1,9 +1,10 @@
 package main
 
 /*
-#cgo CFLAGS: -Icore/snow/include
-#cgo LDFLAGS: -L${SRCDIR}/lib  -lsnow
+#cgo CFLAGS: -Icore/snow/include -Icore/UidGenerator/include
+#cgo LDFLAGS: -L$lib  -lsnow -luidgenerator
 #include <snow.h>
+#include <RingBuffer.h>
 */
 import "C"
 import (

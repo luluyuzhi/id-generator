@@ -1,6 +1,6 @@
 ## how to use :
 
-LD_LIBRARY_PATH=lib dapr run --app-id service-snow  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run main.go
+LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run ./src
 
 ### The functions to be implemented in the future are as follows:
 

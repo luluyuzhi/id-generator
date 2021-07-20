@@ -1,5 +1,8 @@
 module benjamin
 
-go 1.15
+go 1.16
 
-require github.com/dapr/go-sdk v1.1.0
+require (
+	github.com/dapr/go-sdk v1.1.0
+	github.com/stretchr/testify v1.7.0 // indirect
+)

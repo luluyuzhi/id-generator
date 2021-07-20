@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stdatomic.h>
 #include <stdlib.h>
+const int32_t DEFAULT_PADDING_PERCENT = 50;
 
 struct RingBuffer
 {

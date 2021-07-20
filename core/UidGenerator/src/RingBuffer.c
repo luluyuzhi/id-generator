@@ -23,7 +23,7 @@ void RingBufferInit(struct RingBuffer *ringBuffer, int32_t bufferSize, int32_t p
 
 void RingBufferInitWithoutFactory(struct RingBuffer *ringBuffer, int32_t bufferSize)
 {
-    const static int32_t DEFAULT_PADDING_PERCENT = 50;
+
     RingBufferInit(ringBuffer, bufferSize, DEFAULT_PADDING_PERCENT);
 }
 
@@ -133,12 +133,13 @@ long take(struct RingBuffer *ringBuffer)
     if (currentTail - nextCursor < ringBuffer->paddingThreshold)
     {
 
+        return 0;
         // bufferPaddingExecutor.asyncPadding();
     }
 
     if (nextCursor == currentCursor)
     {
-
+        return 1;
         // rejectedTakeHandler.rejectTakeBuffer(this);
     }
 

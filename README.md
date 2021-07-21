@@ -3,9 +3,8 @@
 LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run main.go
 
 ## C SUPPORT
-go list -e -json -compiled -x
 
-## C surpport
+go list -e -json -compiled -x
 
 go list -json -compiled -e runtime/cgo
 
@@ -24,3 +23,6 @@ go list -json -compiled -e runtime/cgo
 [IM消息ID技术专题(五)：开源分布式ID生成器UidGenerator的技术实现](http://www.52im.net/thread-2953-1-1.html)
 
 [IM消息ID技术专题(六)：深度解密滴滴的高性能ID生成器(Tinyid)](http://www.52im.net/thread-3129-1-1.html)
+
+### SOURCE
+[美团 Leaf](https://github.com/Meituan-Dianping/Leaf)

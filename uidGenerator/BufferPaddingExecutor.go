@@ -110,7 +110,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 
 		var uidList []int64 = bufferPaddingExecutor.bufferedUidProvider.provide(int64(atomic.AddInt64(&bufferPaddingExecutor.lastSecond, 1)))
 		for _, uid := range uidList {
-			isFullRingBuffer = C.put(&bufferPaddingExecutor.ringbuffer, C.long(uid)) == 0
+			isFullRingBuffer = C.put(bufferPaddingExecutor.ringBuffer, C.long(uid)) == 0
 			if isFullRingBuffer {
 				break
 			}

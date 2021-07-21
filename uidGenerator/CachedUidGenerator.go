@@ -51,19 +51,13 @@ func (cachedUidGenerator *CachedUidGenerator) initRingBuffer() {
 	fmt.Print("Initialized ring buffer size:{}, paddingFactor:{}", bufferSize, cachedUidGenerator.paddingFactor)
 	var usingSchedule = (cachedUidGenerator.scheduleInterval != 0)
 	cachedUidGenerator.bufferPaddingExecutor = NewBufferPaddingExecutor(&cachedUidGenerator.ringBuffer, true)
-	cachedUidGenerator.bufferPaddingExecutor.bufferedUidProvider = cachedUidGenerator.nextIdsForOneSecond
+
+	cachedUidGenerator.bufferPaddingExecutor.bufferedUidProvider = FuncCaller(cachedUidGenerator.nextIdsForOneSecond)
 	if usingSchedule {
 		cachedUidGenerator.bufferPaddingExecutor.setScheduleInterval(cachedUidGenerator.scheduleInterval)
 	}
-	fmt.Printf("Initialized BufferPaddingExecutor. Using schdule:{}, interval:{}", usingSchedule, cachedUidGenerator.scheduleInterval)
-	// // set rejected put/take handle policy
-	// this.ringBuffer.setBufferPaddingExecutor(bufferPaddingExecutor);
-	// if (rejectedPutBufferHandler != null) {
-	// 	this.ringBuffer.setRejectedPutHandler(rejectedPutBufferHandler);
-	// }
-	// if (rejectedTakeBufferHandler != null) {
-	// 	this.ringBuffer.setRejectedTakeHandler(rejectedTakeBufferHandler);
-	// }
+
+	fmt.Printf("Initialized BufferPaddingExecutor. Using schdule:%t, interval:%+d", usingSchedule, cachedUidGenerator.scheduleInterval)
 
 	// fill in all slots of the RingBuffer
 	cachedUidGenerator.bufferPaddingExecutor.paddingBuffer()

@@ -1,10 +1,9 @@
 package main
 
 /*
-#cgo CFLAGS: -Icore/snow/include -Icore/UidGenerator/include
-#cgo LDFLAGS: -L$lib  -lsnow -luidgenerator
+#cgo CFLAGS: -I${SRCDIR}/core/snow/include
+#cgo LDFLAGS: -L${SRCDIR}/lib  -lsnow
 #include <snow.h>
-#include <RingBuffer.h>
 */
 import "C"
 import (
@@ -13,7 +12,7 @@ import (
 	"errors"
 	"log"
 	"time"
-
+	"uidGenerator"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 )

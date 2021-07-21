@@ -1,5 +1,11 @@
 package uidGenerator
 
+/*
+#cgo CFLAGS: -I${SRCDIR}/core/UidGenerator/include
+#cgo LDFLAGS: -L${SRCDIR}/lib -luidgenerator
+#include <RingBuffer.h>
+*/
+import "C"
 import (
 	"fmt"
 	"unsafe"
@@ -31,17 +37,13 @@ func (cachedUidGenerator CachedUidGenerator) afterPropertiesSet() {
 
 func (cachedUidGenerator CachedUidGenerator) initRingBuffer() {
 	var bufferSize = (cachedUidGenerator.bitsAllocator.getMaxSequence() + 1) << cachedUidGenerator.boostPower
-	cachedUidGenerator.ringBuffer = C.RingBufferInit(&cachedUidGenerator.ringBuffer, bufferSize, cachedUidGenerator.paddingFactor)
+	C.RingBufferInit(&cachedUidGenerator.ringBuffer, C.int32_t(bufferSize), C.int32_t(cachedUidGenerator.paddingFactor))
 	fmt.Print("Initialized ring buffer size:{}, paddingFactor:{}", bufferSize, cachedUidGenerator.paddingFactor)
 }
 
 func (cachedUidGenerator CachedUidGenerator) getUID() int64 {
-	// try {
+
 	return int64(C.take(&cachedUidGenerator.ringBuffer))
-	// } catch (Exception e) {
-	// 	LOGGER.error("Generate unique id exception. ", e);
-	// 	throw new UidGenerateException(e);
-	// }
 }
 func (cachedUidGenerator CachedUidGenerator) parseUID(uid int64) string {
 	return (*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).parseUID(uid)

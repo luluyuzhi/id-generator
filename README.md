@@ -2,6 +2,10 @@
 
 LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run ./src
 
+## C surpport
+
+go list -json -compiled -e runtime/cgo
+
 ### The functions to be implemented in the future are as follows:
 
 [IM消息ID技术专题(一)：微信的海量IM聊天消息序列号生成实践（算法原理篇)](http://www.52im.net/thread-1998-1-1.html)

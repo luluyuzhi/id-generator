@@ -2,7 +2,6 @@ package uidGenerator
 
 import (
 	"fmt"
-	// "time"
 )
 
 /* 有关Task任务相关定义及操作 */
@@ -100,4 +99,4 @@ func (p *Pool) Run() {
 // 	//启动协程池p
 // 	p.Run()
 
-}
+// }

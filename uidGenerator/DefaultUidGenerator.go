@@ -36,7 +36,7 @@ type DefaultUidGenerator struct {
 	workerIdAssigner WorkerIdAssigner
 }
 
-func NewDefaultUidGenerator() DefaultUidGenerator {
+func NewDefaultUidGenerator() *DefaultUidGenerator {
 	var uidGenerator DefaultUidGenerator
 	uidGenerator.timeBits = TIMEBITS
 	uidGenerator.workerBits = WORKERBITS
@@ -47,7 +47,7 @@ func NewDefaultUidGenerator() DefaultUidGenerator {
 
 	uidGenerator.sequence = 0
 	uidGenerator.lastSecond = -1
-	return uidGenerator
+	return &uidGenerator
 }
 
 func (uidGenerator DefaultUidGenerator) afterPropertiesSet() {
@@ -65,7 +65,7 @@ func (uidGenerator DefaultUidGenerator) afterPropertiesSet() {
 
 func (uidGenerator DefaultUidGenerator) getUID() int64 {
 	// try {
-	// 	return uidGenerator.nextId();
+	return uidGenerator.nextId()
 	// } catch (Exception e) {
 	// 	LOGGER.error("Generate unique id exception. ", e);
 	// 	throw new UidGenerateException(e);

@@ -1,12 +1,11 @@
 package uidGenerator
 
 /*
-#cgo CFLAGS: -I../core/UidGenerator/include
-#cgo LDFLAGS: -Llib -luidgenerator
+#cgo CFLAGS: -I${SRCDIR}/core/UidGenerator/include
+#cgo LDFLAGS: -L${SRCDIR}/lib -luidgenerator
 #include <RingBuffer.h>
 */
 import "C"
-
 import (
 	"fmt"
 	"sync/atomic"
@@ -112,7 +111,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 
 		var uidList []int64 = bufferPaddingExecutor.bufferedUidProvider.provide(int64(atomic.AddInt64(&bufferPaddingExecutor.lastSecond, 1)))
 		for _, uid := range uidList {
-			isFullRingBuffer = C.put(&bufferPaddingExecutor.ringbuffer, _Ctype_long(uid)) == 0
+			isFullRingBuffer = C.put(&bufferPaddingExecutor.ringbuffer, C.long(uid)) == 0
 			if isFullRingBuffer {
 				break
 			}

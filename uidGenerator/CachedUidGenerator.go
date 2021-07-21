@@ -12,6 +12,8 @@ import (
 	"unsafe"
 )
 
+// 使用前必须设置集群 ID
+
 const _DEFAULT_BOOST_POWER = 3
 const START_POINT = -1
 const CAN_PUT_FLAG = 0
@@ -23,10 +25,7 @@ type CachedUidGenerator struct {
 
 	boostPower       int32
 	paddingFactor    int32
-	scheduleInterval int64
-
-	// rejectedPutBufferHandler  RejectedPutBufferHandler
-	// rejectedTakeBufferHandler RejectedTakeBufferHandler
+	scheduleInterval int64 // set to 0 if not using schedule
 
 	ringBuffer            C.struct_RingBuffer
 	bufferPaddingExecutor *BufferPaddingExecutor
@@ -35,6 +34,7 @@ type CachedUidGenerator struct {
 func New() *CachedUidGenerator {
 	var cachedUidGenerator CachedUidGenerator
 
+	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).init()
 	cachedUidGenerator.boostPower = _DEFAULT_BOOST_POWER
 	cachedUidGenerator.paddingFactor = DEFAULT_PADDING_PERCENT
 	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).afterPropertiesSet()
@@ -48,7 +48,7 @@ func New() *CachedUidGenerator {
 func (cachedUidGenerator *CachedUidGenerator) initRingBuffer() {
 	var bufferSize = (cachedUidGenerator.bitsAllocator.getMaxSequence() + 1) << cachedUidGenerator.boostPower
 	C.RingBufferInit(&cachedUidGenerator.ringBuffer, C.int32_t(bufferSize), C.int32_t(cachedUidGenerator.paddingFactor))
-	fmt.Print("Initialized ring buffer size:{}, paddingFactor:{}", bufferSize, cachedUidGenerator.paddingFactor)
+	fmt.Printf("Initialized ring buffer size:%d, paddingFactor:%d", bufferSize, cachedUidGenerator.paddingFactor)
 	var usingSchedule = (cachedUidGenerator.scheduleInterval != 0)
 	cachedUidGenerator.bufferPaddingExecutor = NewBufferPaddingExecutor(&cachedUidGenerator.ringBuffer, true)
 
@@ -76,15 +76,11 @@ func (cachedUidGenerator *CachedUidGenerator) GetUID() (int64, error) {
 	if takeResult == -1 {
 		return -1, errors.New("unsolve error generator")
 	}
-
 	return takeResult, nil
 }
+
 func (cachedUidGenerator CachedUidGenerator) ParseUID(uid int64) string {
 	return (*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).parseUID(uid)
-}
-
-func (cachedUidGenerator CachedUidGenerator) destroy() {
-	cachedUidGenerator.bufferPaddingExecutor.shutdown()
 }
 
 func (cachedUidGenerator CachedUidGenerator) nextIdsForOneSecond(currentSecond int64) []int64 {
@@ -112,4 +108,11 @@ func (cachedUidGenerator *CachedUidGenerator) SetBoostPower(boostPower int32) {
 func (cachedUidGenerator *CachedUidGenerator) SetScheduleInterval(scheduleInterval int64) {
 	// assert.Equal(scheduleInterval > 0, true, "Schedule interval must positive!")
 	cachedUidGenerator.scheduleInterval = scheduleInterval
+
 }
+
+func Destroy(cachedUidGenerator *CachedUidGenerator) {
+	cachedUidGenerator.bufferPaddingExecutor.shutdown()
+}
+
+// runtime.SetFinalizer(r, destroy)

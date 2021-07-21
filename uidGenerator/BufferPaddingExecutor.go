@@ -18,8 +18,10 @@ type UidGenerator interface {
 }
 
 const DEFAULT_SCHEDULE_INTERVAL int64 = 5 * 60 // 5 minutes
-const WORKER_NAME string = "RingBuffer-Padding-Worker"
-const SCHEDULE_NAME string = "RingBuffer-Padding-SCHEDULE"
+const (
+	WORKER_NAME   = "RingBuffer-Padding-Worker"
+	SCHEDULE_NAME = "RingBuffer-Padding-SCHEDULE"
+)
 
 // lambda supported
 type BufferedUidProvider interface {
@@ -59,14 +61,13 @@ func NewBufferPaddingExecutor(ringbuffer *C.struct_RingBuffer, usingSchedule boo
 	} else {
 		p.ticker = nil
 	}
-
 	return &p
 }
 
 func (bufferPaddingExecutor BufferPaddingExecutor) start() {
 	if bufferPaddingExecutor.ticker != nil {
 		go func() {
-			for _ = range bufferPaddingExecutor.ticker.C {
+			for range bufferPaddingExecutor.ticker.C {
 				bufferPaddingExecutor.paddingBuffer()
 			}
 		}()
@@ -97,7 +98,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) asyncPadding() {
 
 func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 	if atomic.CompareAndSwapInt64(&bufferPaddingExecutor.running, 0, 1) {
-		fmt.Printf("Padding buffer is still running. {}", bufferPaddingExecutor.ringBuffer)
+		fmt.Printf("Padding buffer is still running. %v", bufferPaddingExecutor.ringBuffer)
 		return
 	}
 
@@ -117,11 +118,11 @@ func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 		}
 		atomic.CompareAndSwapInt64(&bufferPaddingExecutor.running, 0, 1)
 
-		fmt.Printf("End to padding buffer lastSecond:{}. {}", atomic.LoadInt64(&bufferPaddingExecutor.lastSecond), bufferPaddingExecutor.ringBuffer)
+		fmt.Printf("End to padding buffer lastSecond:%d. %v", atomic.LoadInt64(&bufferPaddingExecutor.lastSecond), bufferPaddingExecutor.ringBuffer)
 	}
 }
 
-func (bufferPaddingExecutor BufferPaddingExecutor) setScheduleInterval(scheduleInterval int64) {
+func (bufferPaddingExecutor *BufferPaddingExecutor) setScheduleInterval(scheduleInterval int64) {
 
 	bufferPaddingExecutor.scheduleInterval = scheduleInterval
 }

@@ -14,10 +14,13 @@ type WorkerIdAssigner interface {
 	assignWorkerId() int64
 }
 
-const EPOCHSTR = "2006-01-02"
-const TIMEBITS = 28
-const WORKERBITS = 22
-const SEQBITS = 13
+const EPOCHSTR = "2006-01-02 00:00:00"
+
+const (
+	TIMEBITS   = 28
+	WORKERBITS = 22
+	SEQBITS    = 13
+)
 
 type DefaultUidGenerator struct {
 	/** Bits allocate */
@@ -38,39 +41,53 @@ type DefaultUidGenerator struct {
 
 func NewDefaultUidGenerator() *DefaultUidGenerator {
 	var uidGenerator DefaultUidGenerator
+
 	uidGenerator.timeBits = TIMEBITS
 	uidGenerator.workerBits = WORKERBITS
 	uidGenerator.seqBits = SEQBITS
 
-	uidGenerator.epochSeconds = 1463673600000
+	// https://www.cnblogs.com/akidongzi/p/12801574.html?ivk_sa=1024320u
 	uidGenerator.epochStr = EPOCHSTR
+	times, _ := time.Parse("2006-01-02 15:04:05", uidGenerator.epochStr)
+	// 1463673600000
+	uidGenerator.epochSeconds = times.Unix()
 
 	uidGenerator.sequence = 0
 	uidGenerator.lastSecond = -1
+	//
+	uidGenerator.afterPropertiesSet()
 	return &uidGenerator
 }
 
-func (uidGenerator DefaultUidGenerator) afterPropertiesSet() {
+func (uidGenerator *DefaultUidGenerator) init() {
+	uidGenerator.timeBits = TIMEBITS
+	uidGenerator.workerBits = WORKERBITS
+	uidGenerator.seqBits = SEQBITS
+
+	times, _ := time.Parse("2006-01-02 15:04:05", uidGenerator.epochStr)
+	// 1463673600000
+	uidGenerator.epochSeconds = times.Unix()
+
+	uidGenerator.sequence = 0
+	uidGenerator.lastSecond = -1
+}
+
+func (uidGenerator *DefaultUidGenerator) afterPropertiesSet() {
 	var bitsAllocator = NewBitsAllocator(uidGenerator.timeBits, uidGenerator.workerBits, uidGenerator.seqBits)
 	uidGenerator.workerId = uidGenerator.workerIdAssigner.assignWorkerId()
 	if uidGenerator.workerId > bitsAllocator.getMaxWorkerId() {
-		fmt.Printf("Worker id {}  exceeds the max {}", uidGenerator.workerId, bitsAllocator.getMaxWorkerId())
+		fmt.Printf("Worker id %d  exceeds the max %d \n", uidGenerator.workerId, bitsAllocator.getMaxWorkerId())
 	}
 
-	fmt.Printf("Initialized bits(1, {}, {}, {}) for workerID:{}", uidGenerator.timeBits,
+	fmt.Printf("Initialized bits(1, %d, %d, %d) for workerID: %d\n",
+		uidGenerator.timeBits,
 		uidGenerator.workerBits,
 		uidGenerator.seqBits,
 		uidGenerator.workerId)
 }
 
-func (uidGenerator DefaultUidGenerator) getUID() int64 {
-	// try {
+func (uidGenerator *DefaultUidGenerator) getUID() int64 {
 	return uidGenerator.nextId()
-	// } catch (Exception e) {
-	// 	LOGGER.error("Generate unique id exception. ", e);
-	// 	throw new UidGenerateException(e);
-	// }
-	return 1
 }
 
 func (uidGenerator DefaultUidGenerator) parseUID(uid int64) string {
@@ -89,11 +106,12 @@ func (uidGenerator DefaultUidGenerator) parseUID(uid int64) string {
 	thatTimeStr := timeObj.String()
 
 	// format as string
-	return fmt.Sprintln("{\"UID\":\"%d\",\"timestamp\":\"%s\",\"workerId\":\"%d\",\"sequence\":\"%d\"}",
+	return fmt.Sprintf("{\"UID\":\"%d\",\"timestamp\":\"%s\",\"workerId\":\"%d\",\"sequence\":\"%d\"}\n",
 		uid, thatTimeStr, workerId, sequence)
 }
 
-func (uidGenerator DefaultUidGenerator) nextId() int64 {
+// 有悲观锁
+func (uidGenerator *DefaultUidGenerator) nextId() int64 {
 	var currentSecond int64 = uidGenerator.getCurrentSecond()
 
 	// Clock moved backwards, refuse to generate uid
@@ -136,24 +154,27 @@ func (uidGenerator DefaultUidGenerator) getNextSecond(lastTimestamp int64) int64
 func (uidGenerator DefaultUidGenerator) getCurrentSecond() int64 {
 	currentSecond := time.Now().Unix()
 	if currentSecond-uidGenerator.epochSeconds > uidGenerator.bitsAllocator.getMaxDeltaSeconds() {
-		fmt.Printf("Timestamp bits is exhausted. Refusing UID generate. Now: {}", currentSecond)
+		fmt.Printf("Timestamp bits is exhausted. Refusing UID generate. Now: %d", currentSecond)
 	}
 
 	return currentSecond
 }
 
-func (uidGenerator DefaultUidGenerator) setWorkerIdAssigner(workerIdAssigner WorkerIdAssigner) {
+func (uidGenerator *DefaultUidGenerator) SetWorkerIdAssigner(workerIdAssigner WorkerIdAssigner) {
 	uidGenerator.workerIdAssigner = workerIdAssigner
 }
-func (uidGenerator DefaultUidGenerator) setTimeBits(timeBits int32) {
+
+func (uidGenerator *DefaultUidGenerator) SetTimeBits(timeBits int32) {
 	if timeBits > 0 {
 		uidGenerator.timeBits = timeBits
 	}
 }
 
-// func (uidGenerator DefaultUidGenerator) setEpochStr(epochStr string) {
-// 	if StringUtils.isNotBlank(epochStr) {
-// 		uidGenerator.epochStr = epochStr
-// 		uidGenerator.epochSeconds = TimeUnit.MILLISECONDS.toSeconds(DateUtils.parseByDayPattern(epochStr).getTime())
-// 	}
-// }
+func (uidGenerator *DefaultUidGenerator) SetEpochStr(epochStr string) {
+	if len(epochStr) == 0 {
+		uidGenerator.epochStr = epochStr
+		times, _ := time.Parse("2006-01-02 15:04:05", uidGenerator.epochStr)
+		// 1463673600000
+		uidGenerator.epochSeconds = times.Unix()
+	}
+}

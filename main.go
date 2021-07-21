@@ -7,12 +7,13 @@ package main
 */
 import "C"
 import (
+	"benjamin/uidGenerator"
 	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"time"
-	"benjamin/uidGenerator"
+
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 )
@@ -25,6 +26,9 @@ func (snowFlake SnowFlake) todo() float64 {
 }
 
 func main() {
+
+	cachedUidGenerator := uidGenerator.New()
+
 	var snowflakeIdWorker C.struct_SnowflakeIdWorker
 	C.snowflakeIdWorkerInit(&snowflakeIdWorker, 1, 1)
 	var mutex C.pthread_mutex_t

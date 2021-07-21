@@ -12,7 +12,7 @@ import (
 	"errors"
 	"log"
 	"time"
-	"uidGenerator"
+	"benjamin/uidGenerator"
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 )

@@ -1,6 +1,9 @@
 ## how to use :
 
-LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run ./src
+LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run main.go
+
+## C SUPPORT
+go list -e -json -compiled -x
 
 ## C surpport
 

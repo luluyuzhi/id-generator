@@ -1,8 +1,8 @@
 package uidGenerator
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/core/UidGenerator/include
-#cgo LDFLAGS: -L${SRCDIR}/lib -luidgenerator
+#cgo CFLAGS: -I../core/UidGenerator/include
+#cgo LDFLAGS: -L../lib -luidgenerator
 #include <RingBuffer.h>
 */
 import "C"
@@ -35,7 +35,7 @@ type BufferedUidProvider interface {
 type BufferPaddingExecutor struct {
 	running             int64
 	lastSecond          int64
-	ringbuffer          C.struct_RingBuffer
+	ringBuffer          *C.struct_RingBuffer
 	bufferedUidProvider BufferedUidProvider
 	taskPool            *Pool
 
@@ -44,14 +44,14 @@ type BufferPaddingExecutor struct {
 	scheduleInterval int64 // DEFAULT_SCHEDULE_INTERVAL
 }
 
-func NewBufferPaddingExecutor(usingSchedule bool) *BufferPaddingExecutor {
+func NewBufferPaddingExecutor(ringbuffer *C.struct_RingBuffer, usingSchedule bool) *BufferPaddingExecutor {
 
 	var p BufferPaddingExecutor
 
 	atomic.StoreInt64(&p.running, 0)
 	atomic.StoreInt64(&p.lastSecond, time.Now().Unix())
 	p.taskPool = NewPool(4)
-	// this.ringBuffer = ringBuffer;
+	p.ringBuffer = ringbuffer
 	p.scheduleInterval = 300
 	// initialize schedule thread
 	if usingSchedule {
@@ -71,7 +71,6 @@ func (bufferPaddingExecutor BufferPaddingExecutor) start() {
 			}
 		}()
 	}
-
 }
 
 func (bufferPaddingExecutor BufferPaddingExecutor) isRunning() bool {
@@ -98,7 +97,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) asyncPadding() {
 
 func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 	if atomic.CompareAndSwapInt64(&bufferPaddingExecutor.running, 0, 1) {
-		fmt.Printf("Padding buffer is still running. {}", bufferPaddingExecutor.ringbuffer)
+		fmt.Printf("Padding buffer is still running. {}", bufferPaddingExecutor.ringBuffer)
 		return
 	}
 
@@ -118,7 +117,7 @@ func (bufferPaddingExecutor BufferPaddingExecutor) paddingBuffer() {
 		}
 		atomic.CompareAndSwapInt64(&bufferPaddingExecutor.running, 0, 1)
 
-		fmt.Printf("End to padding buffer lastSecond:{}. {}", atomic.LoadInt64(&bufferPaddingExecutor.lastSecond), bufferPaddingExecutor.ringbuffer)
+		fmt.Printf("End to padding buffer lastSecond:{}. {}", atomic.LoadInt64(&bufferPaddingExecutor.lastSecond), bufferPaddingExecutor.ringBuffer)
 	}
 }
 

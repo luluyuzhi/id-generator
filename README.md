@@ -2,6 +2,10 @@
 
 LIBRARY_PATH=lib dapr run --app-id uid-generator  --app-protocol grpc  --app-port 50001  --dapr-grpc-port 3501 --log-level debug --components-path ./config go run main.go
 
+## how to use DI :
+
+https://github.com/facebookarchive/inject/blob/master/example_test.go
+
 ## GO SUPPORT
 
 [golang 编程规范 - 项目目录结构](https://makeoptim.com/golang/standards/project-layout#api)

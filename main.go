@@ -27,7 +27,9 @@ func (snowFlake SnowFlake) todo() float64 {
 
 func main() {
 
-	cachedUidGenerator := uidGenerator.New()
+	id := func() int64 { return 1 }
+	cachedUidGenerator := uidGenerator.New(uidGenerator.GenerateId(id))
+	cachedUidGenerator.GetUID()
 
 	var snowflakeIdWorker C.struct_SnowflakeIdWorker
 	C.snowflakeIdWorkerInit(&snowflakeIdWorker, 1, 1)

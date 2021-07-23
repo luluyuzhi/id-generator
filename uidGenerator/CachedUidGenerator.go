@@ -12,13 +12,13 @@ import (
 	"unsafe"
 )
 
-// 使用前必须设置集群 ID
-
-const _DEFAULT_BOOST_POWER = 3
-const START_POINT = -1
-const CAN_PUT_FLAG = 0
-const CAN_TAKE_FLAG = 1
-const DEFAULT_PADDING_PERCENT = 50
+const (
+	DEFAULT_BOOST_POWER     = 3
+	START_POINT             = -1
+	CAN_PUT_FLAG            = 0
+	CAN_TAKE_FLAG           = 1
+	DEFAULT_PADDING_PERCENT = 50
+)
 
 type CachedUidGenerator struct {
 	DefaultUidGenerator
@@ -31,12 +31,15 @@ type CachedUidGenerator struct {
 	bufferPaddingExecutor *BufferPaddingExecutor
 }
 
-func New() *CachedUidGenerator {
+func New(workerIdAssigner WorkerIdAssigner) *CachedUidGenerator {
 	var cachedUidGenerator CachedUidGenerator
 
 	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).init()
-	cachedUidGenerator.boostPower = _DEFAULT_BOOST_POWER
+	cachedUidGenerator.boostPower = DEFAULT_BOOST_POWER
 	cachedUidGenerator.paddingFactor = DEFAULT_PADDING_PERCENT
+
+	cachedUidGenerator.SetWorkerIdAssigner(workerIdAssigner)
+
 	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).afterPropertiesSet()
 
 	// initialize RingBuffer & RingBufferPaddingExecutor
@@ -48,7 +51,7 @@ func New() *CachedUidGenerator {
 func (cachedUidGenerator *CachedUidGenerator) initRingBuffer() {
 	var bufferSize = (cachedUidGenerator.bitsAllocator.getMaxSequence() + 1) << cachedUidGenerator.boostPower
 	C.RingBufferInit(&cachedUidGenerator.ringBuffer, C.int32_t(bufferSize), C.int32_t(cachedUidGenerator.paddingFactor))
-	fmt.Printf("Initialized ring buffer size:%d, paddingFactor:%d", bufferSize, cachedUidGenerator.paddingFactor)
+	fmt.Printf("Initialized ring buffer size:%d, paddingFactor:%d\n", bufferSize, cachedUidGenerator.paddingFactor)
 	var usingSchedule = (cachedUidGenerator.scheduleInterval != 0)
 	cachedUidGenerator.bufferPaddingExecutor = NewBufferPaddingExecutor(&cachedUidGenerator.ringBuffer, true)
 
@@ -57,7 +60,7 @@ func (cachedUidGenerator *CachedUidGenerator) initRingBuffer() {
 		cachedUidGenerator.bufferPaddingExecutor.setScheduleInterval(cachedUidGenerator.scheduleInterval)
 	}
 
-	fmt.Printf("Initialized BufferPaddingExecutor. Using schdule:%t, interval:%+d", usingSchedule, cachedUidGenerator.scheduleInterval)
+	fmt.Printf("Initialized BufferPaddingExecutor. Using schdule:%t, interval:%+d\n", usingSchedule, cachedUidGenerator.scheduleInterval)
 
 	// fill in all slots of the RingBuffer
 	cachedUidGenerator.bufferPaddingExecutor.paddingBuffer()
@@ -80,7 +83,7 @@ func (cachedUidGenerator *CachedUidGenerator) GetUID() (int64, error) {
 }
 
 func (cachedUidGenerator CachedUidGenerator) ParseUID(uid int64) string {
-	return (*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).parseUID(uid)
+	return (*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).ParseUID(uid)
 }
 
 func (cachedUidGenerator CachedUidGenerator) nextIdsForOneSecond(currentSecond int64) []int64 {

@@ -54,7 +54,7 @@ func NewDefaultUidGenerator() *DefaultUidGenerator {
 
 	uidGenerator.sequence = 0
 	uidGenerator.lastSecond = -1
-	//
+
 	uidGenerator.afterPropertiesSet()
 	return &uidGenerator
 }
@@ -64,6 +64,7 @@ func (uidGenerator *DefaultUidGenerator) init() {
 	uidGenerator.workerBits = WORKERBITS
 	uidGenerator.seqBits = SEQBITS
 
+	uidGenerator.epochStr = EPOCHSTR
 	times, _ := time.Parse("2006-01-02 15:04:05", uidGenerator.epochStr)
 	// 1463673600000
 	uidGenerator.epochSeconds = times.Unix()
@@ -86,11 +87,11 @@ func (uidGenerator *DefaultUidGenerator) afterPropertiesSet() {
 		uidGenerator.workerId)
 }
 
-func (uidGenerator *DefaultUidGenerator) getUID() int64 {
+func (uidGenerator *DefaultUidGenerator) GetUID() int64 {
 	return uidGenerator.nextId()
 }
 
-func (uidGenerator DefaultUidGenerator) parseUID(uid int64) string {
+func (uidGenerator DefaultUidGenerator) ParseUID(uid int64) string {
 	var totalBits int32 = TOTAL_BITS
 	var signBits int32 = uidGenerator.bitsAllocator.getSignBits()
 	var timestampBits int32 = uidGenerator.bitsAllocator.getTimestampBits()

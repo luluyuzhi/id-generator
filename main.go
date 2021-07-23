@@ -14,6 +14,9 @@ import (
 	"log"
 	"time"
 
+	gorm "github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
 )
@@ -31,6 +34,7 @@ func main() {
 	cachedUidGenerator := uidGenerator.New(uidGenerator.GenerateId(id))
 	cachedUidGenerator.GetUID()
 
+	db, err := gorm.Open("mysql", "root:bgbiao.top@(127.0.0.1:13306)/test_api?charset=utf8&parseTime=True&loc=Local")
 	var snowflakeIdWorker C.struct_SnowflakeIdWorker
 	C.snowflakeIdWorkerInit(&snowflakeIdWorker, 1, 1)
 	var mutex C.pthread_mutex_t

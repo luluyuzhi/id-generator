@@ -32,26 +32,26 @@ type CachedUidGenerator struct {
 }
 
 func New(workerIdAssigner WorkerIdAssigner) *CachedUidGenerator {
-	var cachedUidGenerator CachedUidGenerator
+	cachedUidGenerator := new(CachedUidGenerator)
 
-	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).init()
+	cachedUidGenerator.init()
 	cachedUidGenerator.boostPower = DEFAULT_BOOST_POWER
 	cachedUidGenerator.paddingFactor = DEFAULT_PADDING_PERCENT
 
 	cachedUidGenerator.SetWorkerIdAssigner(workerIdAssigner)
 
-	(*DefaultUidGenerator)(unsafe.Pointer(&cachedUidGenerator)).afterPropertiesSet()
+	cachedUidGenerator.afterPropertiesSet()
 
 	// initialize RingBuffer & RingBufferPaddingExecutor
 	cachedUidGenerator.initRingBuffer()
 	fmt.Printf("Initialized RingBuffer successfully.")
-	return &cachedUidGenerator
+	return cachedUidGenerator
 }
 
 func (cachedUidGenerator *CachedUidGenerator) initRingBuffer() {
 	var bufferSize = (cachedUidGenerator.bitsAllocator.getMaxSequence() + 1) << cachedUidGenerator.boostPower
 	C.RingBufferInit(&cachedUidGenerator.ringBuffer, C.int32_t(bufferSize), C.int32_t(cachedUidGenerator.paddingFactor))
-	fmt.Printf("Initialized ring buffer size:%d, paddingFactor:%d\n", bufferSize, cachedUidGenerator.paddingFactor)
+	fmt.Printf("Initialized ring buffer size: %d, paddingFactor: %d\n", bufferSize, cachedUidGenerator.paddingFactor)
 	var usingSchedule = (cachedUidGenerator.scheduleInterval != 0)
 	cachedUidGenerator.bufferPaddingExecutor = NewBufferPaddingExecutor(&cachedUidGenerator.ringBuffer, true)
 
@@ -114,7 +114,7 @@ func (cachedUidGenerator *CachedUidGenerator) SetScheduleInterval(scheduleInterv
 
 }
 
-func Destroy(cachedUidGenerator *CachedUidGenerator) {
+func (cachedUidGenerator *CachedUidGenerator) Destroy() {
 	cachedUidGenerator.bufferPaddingExecutor.shutdown()
 }
 

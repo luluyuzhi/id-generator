@@ -7,15 +7,13 @@ package main
 */
 import "C"
 import (
+	// "benjamin/orm"
 	"benjamin/uidGenerator"
 	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"time"
-
-	gorm "github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 
 	"github.com/dapr/go-sdk/service/common"
 	daprd "github.com/dapr/go-sdk/service/grpc"
@@ -30,11 +28,14 @@ func (snowFlake SnowFlake) todo() float64 {
 
 func main() {
 
-	id := func() int64 { return 1 }
+	id := func() int64 {
+		// orm.GenerateWorkerNode("benjieming", 1, 1)
+		return 1
+	}
 	cachedUidGenerator := uidGenerator.New(uidGenerator.GenerateId(id))
+	defer cachedUidGenerator.Destroy()
 	cachedUidGenerator.GetUID()
 
-	db, err := gorm.Open("mysql", "root:bgbiao.top@(127.0.0.1:13306)/test_api?charset=utf8&parseTime=True&loc=Local")
 	var snowflakeIdWorker C.struct_SnowflakeIdWorker
 	C.snowflakeIdWorkerInit(&snowflakeIdWorker, 1, 1)
 	var mutex C.pthread_mutex_t

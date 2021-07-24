@@ -14,7 +14,7 @@ type WorkerIdAssigner interface {
 	assignWorkerId() int64
 }
 
-const EPOCHSTR = "2006-01-02 00:00:00"
+const EPOCHSTR = "2016-09-20 00:00:00"
 
 const (
 	TIMEBITS   = 28
@@ -28,14 +28,16 @@ type DefaultUidGenerator struct {
 	workerBits int32
 	seqBits    int32
 	/** Customer epoch, unit as second. For example 2016-05-20 (ms: 1463673600000)*/
-	epochStr      string
-	epochSeconds  int64
-	bitsAllocator BitsAllocator
-	workerId      int64
+	epochStr     string
+	epochSeconds int64
 
 	sequence   int64
 	lastSecond int64
 
+	// afterPropertiesSet
+	bitsAllocator BitsAllocator
+	workerId      int64
+	// no init
 	workerIdAssigner WorkerIdAssigner
 }
 
@@ -67,6 +69,7 @@ func (uidGenerator *DefaultUidGenerator) init() {
 	uidGenerator.epochStr = EPOCHSTR
 	times, _ := time.Parse("2006-01-02 15:04:05", uidGenerator.epochStr)
 	// 1463673600000
+	// 1474329600
 	uidGenerator.epochSeconds = times.Unix()
 
 	uidGenerator.sequence = 0
